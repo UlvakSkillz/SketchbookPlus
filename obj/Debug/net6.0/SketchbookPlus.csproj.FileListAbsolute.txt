@@ -102,3 +102,4 @@ C:\Users\austi\source\repos\OutfitSaver\OutfitSaver\obj\Debug\net6.0\SketchbookP
 C:\Users\austi\source\repos\OutfitSaver\OutfitSaver\obj\Debug\net6.0\refint\SketchbookPlus.dll
 C:\Users\austi\source\repos\OutfitSaver\OutfitSaver\obj\Debug\net6.0\SketchbookPlus.pdb
 C:\Users\austi\source\repos\OutfitSaver\OutfitSaver\obj\Debug\net6.0\ref\SketchbookPlus.dll
+C:\Users\austi\source\repos\OutfitSaver\OutfitSaver\obj\Debug\net6.0\SketchbookPlus.sourcelink.json
