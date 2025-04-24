@@ -11,14 +11,14 @@ namespace SketchbookPlus
     public static class BuildInfo
     {
         public const string ModName = "SketchbookPlus";
-        public const string ModVersion = "1.1.0";
+        public const string ModVersion = "1.1.1";
         public const string Author = "UlvakSkillz";
     }
     public class main : MelonMod
     {
         public static Mod SketchbookPlus = new Mod();
         private string currentScene = "Loader";
-        private System.Random random = new System.Random();
+        private System.Random random = new System.Random(DateTime.Now.Millisecond * DateTime.Now.Second * DateTime.Now.Minute);
         private List<string> acceptedFiles = new List<string>();
         private List<string> failedFiles = new List<string>();
         private List<string> pendingFiles = new List<string>();
@@ -73,7 +73,6 @@ namespace SketchbookPlus
             pendingFiles.Clear();
             acceptedFiles.Clear();
             failedFiles.Clear();
-            Calls.onPlayerSpawned += playerJoined; //REMOVE
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -232,65 +231,6 @@ namespace SketchbookPlus
             Log("Saving " + file + " Complete");
         }
         
-        // /*
-        private bool checkingPlayers = false;//REMOVE
-
-        private void playerJoined()//REMOVE
-        {
-            if (!checkingPlayers)
-            {
-                MelonCoroutines.Start(checkPlayers());
-            }
-        }
-
-        private IEnumerator checkPlayers()//REMOVE
-        {
-            checkingPlayers = true;
-            debugLog("Checking Players");
-            yield return new WaitForSeconds(2);
-            if (PlayerManager.instance.AllPlayers.Count > 1)
-            {
-                foreach (Player player in Calls.Players.GetEnemyPlayers())
-                {
-                    string visuals = getOutfitString(player.Data.visualData);
-                    string name = player.Data.GeneralData.PublicUsername;
-                    if (name.Contains("<") || name.Contains(">"))
-                    {
-                        name = name.Replace("<", "_");
-                        name = name.Replace(">", "_");
-                    }
-                    if (!File.Exists(@"UserData\SketchbookPlus\Stolen\" + name + ".txt"))
-                    {
-                        debugLog($"Saving {name}'s Model");
-                    }
-                    else
-                    {
-                        debugLog($"Found Existing {name}'s Model, Overriding Text");
-                    }
-                    saveFile(visuals, @"UserData\SketchbookPlus\Stolen\" + name + ".txt");
-                }
-            }
-            else
-            {
-                debugLog("No Others Found");
-            }
-            checkingPlayers = false;
-            yield break;
-        }
-
-        private void loadOutfit(string[] fileText)//REMOVE
-        {
-            PlayerVisualData pvd = PlayerManager.instance.localPlayer.Data.VisualData;
-            PlayerVisualData tempPVD = new PlayerVisualData(pvd);
-            setPVD(tempPVD, pvd);
-            setPVD(tempPVD, fileText);
-            if (!checkItems(tempPVD.ToPlayfabDataString()))
-            {
-                debugLog("Setting Illegal Outfit");
-            }
-            setPVD(pvd, tempPVD);
-        }
-        // */
 
         private void setupRandomizer()
         {
@@ -538,6 +478,15 @@ namespace SketchbookPlus
 
         private void mapInit()
         {
+            MelonCoroutines.Start(Wait());
+        }
+
+        private IEnumerator Wait()
+        {
+            if (Calls.Mods.findOwnMod("CloneBending", "1.0.0", false))
+            {
+                yield return new WaitForSeconds(11f);
+            }
             if (currentScene == "Gym")
             {
                 if (!randomizerInit)
@@ -546,6 +495,7 @@ namespace SketchbookPlus
                 }
                 Save();
             }
+            yield break;
         }
 
         private void loadFileTexts()

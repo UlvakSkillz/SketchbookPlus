@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SketchbookPlus")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80ab8a6017cce6624ab1968632c58ae344bf6437")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3557a41570ccb483dd9d0d0e2571ac39ae8eb5b5")]
 [assembly: System.Reflection.AssemblyProductAttribute("SketchbookPlus")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SketchbookPlus")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
