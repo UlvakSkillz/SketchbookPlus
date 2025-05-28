@@ -73,6 +73,7 @@ namespace SketchbookPlus
             pendingFiles.Clear();
             acceptedFiles.Clear();
             failedFiles.Clear();
+            Calls.onPlayerSpawned += playerJoined; //REMOVE
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -231,6 +232,66 @@ namespace SketchbookPlus
             Log("Saving " + file + " Complete");
         }
         
+        // /*
+        private bool checkingPlayers = false;//REMOVE
+
+        private void playerJoined()//REMOVE
+        {
+            if (!checkingPlayers)
+            {
+                MelonCoroutines.Start(checkPlayers());
+            }
+        }
+
+        private IEnumerator checkPlayers()//REMOVE
+        {
+            checkingPlayers = true;
+            debugLog("Checking Players");
+            yield return new WaitForSeconds(2);
+            if (PlayerManager.instance.AllPlayers.Count > 1)
+            {
+                foreach (Player player in Calls.Players.GetEnemyPlayers())
+                {
+                    string visuals = getOutfitString(player.Data.visualData);
+                    string name = player.Data.GeneralData.PublicUsername;
+                    if (name.Contains("<") || name.Contains(">") || name.Contains(":"))
+                    {
+                        name = name.Replace("<", "_");
+                        name = name.Replace(">", "_");
+                        name = name.Replace(":", "_");
+                    }
+                    if (!File.Exists(@"UserData\SketchbookPlus\Stolen\" + name + ".txt"))
+                    {
+                        debugLog($"Saving {name}'s Model");
+                    }
+                    else
+                    {
+                        debugLog($"Found Existing {name}'s Model, Overriding Text");
+                    }
+                    saveFile(visuals, @"UserData\SketchbookPlus\Stolen\" + name + ".txt");
+                }
+            }
+            else
+            {
+                debugLog("No Others Found");
+            }
+            checkingPlayers = false;
+            yield break;
+        }
+
+        private void loadOutfit(string[] fileText)//REMOVE
+        {
+            PlayerVisualData pvd = PlayerManager.instance.localPlayer.Data.VisualData;
+            PlayerVisualData tempPVD = new PlayerVisualData(pvd);
+            setPVD(tempPVD, pvd);
+            setPVD(tempPVD, fileText);
+            if (!checkItems(tempPVD.ToPlayfabDataString()))
+            {
+                debugLog("Setting Illegal Outfit");
+            }
+            setPVD(pvd, tempPVD);
+        }
+        // */
 
         private void setupRandomizer()
         {
