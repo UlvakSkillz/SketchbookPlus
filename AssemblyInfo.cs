@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using SketchbookPlus;
+using BuildInfo = SketchbookPlus.BuildInfo;
 
 [assembly: MelonInfo(typeof(main), BuildInfo.ModName, BuildInfo.ModVersion, BuildInfo.Author)]
 [assembly: MelonGame("Buckethead Entertainment", "RUMBLE")]
