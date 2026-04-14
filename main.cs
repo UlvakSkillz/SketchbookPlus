@@ -2,22 +2,21 @@
 using Il2CppRUMBLE.Players;
 using MelonLoader;
 using RumbleModdingAPI.RMAPI;
-using RumbleModUI;
 using System.Collections;
 using UnityEngine;
+using UIFramework;
 
 namespace SketchbookPlus
 {
     public static class BuildInfo
     {
         public const string ModName = "SketchbookPlus";
-        public const string ModVersion = "1.2.1";
+        public const string ModVersion = "1.3.0";
         public const string Author = "UlvakSkillz";
     }
 
     public class main : MelonMod
     {
-        public static Mod SketchbookPlus = new Mod();
         private System.Random random = new System.Random(DateTime.Now.Millisecond * DateTime.Now.Second * DateTime.Now.Minute);
         private List<string> acceptedFiles = new List<string>();
         private List<string> failedFiles = new List<string>();
@@ -27,8 +26,6 @@ namespace SketchbookPlus
         private List<List<int>> acceptedItems = new List<List<int>>();
         private bool randomizerInit = false;
         private int lastOutfit = -1;
-        private bool storeOthersOutfits = false;
-        private bool debug = false;
 
         private void Log(string msg)
         {
@@ -37,7 +34,7 @@ namespace SketchbookPlus
 
         private void debugLog(string msg)
         {
-            if (debug)
+            if (Preferences.PrefDebugging.Value)
             {
                 MelonLogger.Msg("-" + msg);
             }
@@ -57,24 +54,6 @@ namespace SketchbookPlus
             {
                 saveFile("", @"UserData\SketchbookPlus\BlackListedItems.txt", false);
             }
-            SketchbookPlus.ModName = "SketchbookPlus";
-            SketchbookPlus.ModVersion = BuildInfo.ModVersion;
-            SketchbookPlus.SetFolder("SketchbookPlus");
-            SketchbookPlus.AddToList("Save Outfit", false, 0, "Set to True and Save to Store the Equipped Outfit", new Tags { DoNotSave = true });
-            SketchbookPlus.AddToList("Saved Outfit Name", "DefaultName", "File Name To Save Under", new Tags { });
-            SketchbookPlus.AddToList("Load Outfit", false, 1, "(Sets in Gym) Set to True and Save to Load the Selected Outfit", new Tags { });
-            SketchbookPlus.AddToList("Outfit Name to Load", "DefaultName", "Outfit to Load from File", new Tags { });
-            SketchbookPlus.AddToList("Random Outfit from Files", false, 1, "(Sets in Gym) Selects a Random Outfit from Saved Outfit Files", new Tags { });
-            SketchbookPlus.AddToList("Randomizer: Identity", false, 0, "On/Off Toggle for Randomizing Identity", new Tags { });
-            SketchbookPlus.AddToList("Randomizer: Armor Colors", true, 0, "On/Off Toggle for Randomizing Armor Colors", new Tags { });
-            SketchbookPlus.AddToList("Randomizer: Armor Items", false, 0, "On/Off Toggle for Randomizing Armor Items", new Tags { });
-            SketchbookPlus.AddToList("Randomizer: Markings", false, 0, "On/Off Toggle for Randomizing Markings", new Tags { });
-            SketchbookPlus.AddToList("Set Random Outfit", false, 1, "(Sets in Gym) Sets the Player to a Randomized Outfit from the Randomizer Selections", new Tags {});
-            SketchbookPlus.AddToList("Store Others Outfits", false, 0, "Set to True to Store Other Player's Cosmetics to UserData/SketchBookPlus/Stored", new Tags {});
-            SketchbookPlus.AddToList("Update Files Texts", false, 0, "Set to True to refresh the Mod's Data from Files", new Tags { DoNotSave = true });
-            SketchbookPlus.GetFromFile();
-            UI.instance.UI_Initialized += UIInit;
-            SketchbookPlus.ModSaved += Save;
             Actions.onMapInitialized += mapInit;
             Actions.onPlayerSpawned += playerJoined;
             pendingFiles.Clear();
@@ -82,38 +61,24 @@ namespace SketchbookPlus
             failedFiles.Clear();
         }
 
-        private void UIInit()
+        public override void OnInitializeMelon()
         {
-            UI.instance.AddMod(SketchbookPlus);
+            Preferences.InitPrefs();
+            UI.Register(this, Preferences.SketchbookPlusCategory, Preferences.SaveLoadCategory, Preferences.RandomizerCategory).OnModSaved += Save;
         }
 
         private void Save()
         {
             debugLog("Main Method Running");
-            bool doSaveOutfit = (bool)SketchbookPlus.Settings[0].SavedValue;
-            string saveOutfitName = (string)SketchbookPlus.Settings[1].SavedValue;
-            bool doLoadOutfit = (bool)SketchbookPlus.Settings[2].SavedValue;
-            string loadOutfitName = (string)SketchbookPlus.Settings[3].SavedValue;
-            bool randomOutfit = (bool)SketchbookPlus.Settings[4].SavedValue;
-            bool randomizeIdentity = (bool)SketchbookPlus.Settings[5].SavedValue;
-            bool randomizeArmorColor = (bool)SketchbookPlus.Settings[6].SavedValue;
-            bool randomizeArmorItems = (bool)SketchbookPlus.Settings[7].SavedValue;
-            bool randomizeMarkings = (bool)SketchbookPlus.Settings[8].SavedValue;
-            bool selectRandomOutfit = (bool)SketchbookPlus.Settings[9].SavedValue;
-            storeOthersOutfits = (bool)SketchbookPlus.Settings[10].SavedValue;
             PlayerVisualData pvd = PlayerManager.instance.localPlayer.Data.VisualData;
             PlayerVisualData tempPVD = new PlayerVisualData(pvd);
             int[] outfit = new int[acceptedItems.Count];
-            //reset Save Button to False
-            SketchbookPlus.Settings[0].Value = false;
-            SketchbookPlus.Settings[0].SavedValue = false;
             //if Reseting Files was true
-            if ((bool)SketchbookPlus.Settings[11].SavedValue)
+            if (Preferences.PrefUpdateFilesTexts.Value)
             {
                 debugLog("Clearing Known Files");
                 //turn Reset Files button to false
-                SketchbookPlus.Settings[11].Value = false;
-                SketchbookPlus.Settings[11].SavedValue = false;
+                Preferences.PrefUpdateFilesTexts.ResetToDefault();
                 pendingFiles.Clear();
                 acceptedFiles.Clear();
                 failedFiles.Clear();
@@ -121,15 +86,15 @@ namespace SketchbookPlus
             debugLog("Rechecking Files");
             recheckFiles();
             debugLog("Done Rechecking Files");
-            if (!saveOutfitName.ToLower().EndsWith(".txt"))
+            if (!Preferences.PrefSavedOutfitName.Value.ToLower().EndsWith(".txt"))
             {
-                saveOutfitName += ".txt";
+                Preferences.PrefSavedOutfitName.Value += ".txt";
             }
-            if (!loadOutfitName.ToLower().EndsWith(".txt"))
+            if (!Preferences.PrefOutfitNameToLoad.Value.ToLower().EndsWith(".txt"))
             {
-                loadOutfitName += ".txt";
+                Preferences.PrefOutfitNameToLoad.Value += ".txt";
             }
-            if (selectRandomOutfit)
+            if (Preferences.PrefOutfitTypeToLoad.Value is OutfitTypes.RandomizerOutfit)
             {
                 debugLog("Starting Randomizer");
                 string[] originalOutfit = getOutfitString(pvd).Split(",");
@@ -147,8 +112,8 @@ namespace SketchbookPlus
                 debugLog("Updated New PVD Variables");
                 for (int x = 0; x < identitySpots.Length + armorColorSpots.Length + markingsSpots.Length + armorItemsSpots.Length; x++)
                 {
-                    if ((randomizeIdentity && identitySpots.Contains(x)) || (randomizeArmorColor && armorColorSpots.Contains(x))
-                        || (randomizeArmorItems && armorItemsSpots.Contains(x)) || (randomizeMarkings && markingsSpots.Contains(x)))
+                    if ((Preferences.PrefRandomizerIdentity.Value && identitySpots.Contains(x)) || (Preferences.PrefRandomizerArmorColors.Value && armorColorSpots.Contains(x))
+                        || (Preferences.PrefArmorItems.Value && armorItemsSpots.Contains(x)) || (Preferences.PrefRandomizerMarkings.Value && markingsSpots.Contains(x)))
                     {
                         newOutfit[x] = acceptedItems[x][random.Next(0, acceptedItems[x].Count)].ToString();
                     }
@@ -157,16 +122,18 @@ namespace SketchbookPlus
                 setPVD(pvd, newOutfit);
                 Log("Randomizer Outfit Set: " + getOutfitString(pvd));
             }
-            else if (doSaveOutfit)
+            else if (Preferences.PrefSaveOutfit.Value)
             {
-                debugLog(@"Saving Outfit: UserData\SketchbookPlus\" + saveOutfitName);
+                //reset Save Button to False
+                Preferences.PrefSaveOutfit.ResetToDefault();
+                debugLog(@"Saving Outfit: UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
                 string textToSave = getOutfitString(PlayerManager.instance.localPlayer.Data.VisualData);
                 debugLog("File Text: " + textToSave);
-                saveFile(textToSave, @"UserData\SketchbookPlus\" + saveOutfitName);
+                saveFile(textToSave, @"UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
             }
             else if (Calls.Scene.GetSceneName() == "Gym")
             {
-                if (randomOutfit && (acceptedFiles.Count > 0))
+                if ((Preferences.PrefOutfitTypeToLoad.Value is OutfitTypes.RandomFromFilesOutfit) && (acceptedFiles.Count > 0))
                 {
                     int thisOutfit = random.Next(0, acceptedFiles.Count);
                     while ((thisOutfit == lastOutfit) && (acceptedFiles.Count > 1))
@@ -177,10 +144,10 @@ namespace SketchbookPlus
                     loadOutfit(acceptedFiles[thisOutfit]);
                     lastOutfit = thisOutfit;
                 }
-                else if (doLoadOutfit)
+                else if (Preferences.PrefOutfitTypeToLoad.Value is OutfitTypes.SavedOutfit)
                 {
-                    debugLog("Loading Selected: " + loadOutfitName);
-                    loadOutfit(@"UserData\SketchbookPlus\" + loadOutfitName);
+                    debugLog("Loading Selected: " + Preferences.PrefOutfitNameToLoad.Value);
+                    loadOutfit(@"UserData\SketchbookPlus\" + Preferences.PrefOutfitNameToLoad.Value);
                 }
             }
         }
@@ -238,7 +205,7 @@ namespace SketchbookPlus
 
         private void playerJoined(Player player)
         {
-            if (storeOthersOutfits && (player.Controller.controllerType == ControllerType.Remote))
+            if (Preferences.PrefStoreOthersOutfits.Value && (player.Controller.controllerType == ControllerType.Remote))
             {
                 MelonCoroutines.Start(checkPlayer(player));
             }
@@ -515,11 +482,6 @@ namespace SketchbookPlus
         private void mapInit(string map)
         {
             debugLog("RMAPI triggered MapInit");
-            MelonCoroutines.Start(Wait(map));
-        }
-
-        private IEnumerator Wait(string map)
-        {
             if (map == "Gym")
             {
                 debugLog("Map is Gym");
@@ -530,7 +492,6 @@ namespace SketchbookPlus
                 }
                 Save();
             }
-            yield break;
         }
 
         private void loadFileTexts()
