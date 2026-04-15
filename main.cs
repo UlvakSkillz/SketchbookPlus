@@ -157,7 +157,7 @@ namespace SketchbookPlus
             string[] files = Directory.GetFiles(@"UserData\SketchbookPlus");
             foreach (string file in files)
             {
-                if ((file == @"UserData\SketchbookPlus\Settings.txt") || (file == @"UserData\SketchbookPlus\BlackListedItems.txt") || failedFiles.Contains(file) || acceptedFiles.Contains(file))
+                if ((file == @"UserData\SketchbookPlus\config.cfg") || (file == @"UserData\SketchbookPlus\BlackListedItems.txt") || failedFiles.Contains(file) || acceptedFiles.Contains(file))
                 {
                     continue;
                 }

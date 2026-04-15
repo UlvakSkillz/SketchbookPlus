@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SketchbookPlus
 {
-    internal enum OutfitTypes
+    public enum OutfitTypes
     {
         [Display(Name = "None")]
         None,

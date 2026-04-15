@@ -9,6 +9,7 @@ using BuildInfo = SketchbookPlus.BuildInfo;
 [assembly: MelonColor(255, 195, 0, 255)]
 [assembly: MelonAuthorColor(255, 195, 0, 255)]
 [assembly: VerifyLoaderVersion(0, 6, 6, true)]
+[assembly: MelonAdditionalDependencies("UIFramework")]
 
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCopyright("Copyright ©  2025")]
