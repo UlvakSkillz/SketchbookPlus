@@ -578,12 +578,38 @@
             Unless the dependency was explicitly declared, Don't use before OnLateInitializeMelon.
             Currently, registration after the first gym load means your mod won't show up on the mod list
             
+            Deprecated: this version of the Register function will be removed in a future version in favor of taking in the MelonBase type instead
+            Please explicitly cast your mod instance as MelonBase to prevent future incompatibility
+            So UI.Register((MelonBase)this, Category1, Category2,...);
             </remarks>
             <returns>A reference to the created Mod Model for further customization</returns>
+        </member>
+        <member name="M:UIFramework.UI.Register(MelonLoader.MelonBase,MelonLoader.MelonPreferences_Category[])">
+            <summary>
+            Registers a mod or a plugin to UIFramework along with its categories.
+            </summary>
+            <param name="modInstance"></param>
+            <param name="categories"></param>
+            <remarks>
+            Unless the dependency was explicitly declared, Don't use before OnLateInitializeMelon.
+            Currently, registration after the first gym load means your mod won't show up on the mod list
+            </remarks>
+            <returns></returns>
         </member>
         <member name="M:UIFramework.UI.Register(MelonLoader.MelonMod)">
             <summary>
             Registers a mod with no categories to the framework. Categories need to be manually added
+            </summary>
+            <remarks>
+            Deprecated: this version of the Register function will be removed in a future version in favor of taking in the MelonBase type instead
+            Please explicitly cast your mod instance as MelonBase to prevent future incompatibility
+            So UI.Register((MelonBase)this);
+            </remarks>
+            <param name="modInstance">Instance of your MelonMod class</param>
+        </member>
+        <member name="M:UIFramework.UI.Register(MelonLoader.MelonBase)">
+            <summary>
+            Registers a mod or plugin with no categories to the framework. Categories need to be manually added
             </summary>
             <param name="modInstance">Instance of your MelonMod class</param>
         </member>

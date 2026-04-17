@@ -11,7 +11,7 @@ namespace SketchbookPlus
     public static class BuildInfo
     {
         public const string ModName = "SketchbookPlus";
-        public const string ModVersion = "1.3.0";
+        public const string ModVersion = "1.3.1";
         public const string Author = "UlvakSkillz";
     }
 
@@ -64,7 +64,7 @@ namespace SketchbookPlus
         public override void OnInitializeMelon()
         {
             Preferences.InitPrefs();
-            UI.Register(this, Preferences.SketchbookPlusCategory, Preferences.SaveLoadCategory, Preferences.RandomizerCategory).OnModSaved += Save;
+            UI.Register((MelonBase)this, Preferences.SketchbookPlusCategory, Preferences.SaveLoadCategory, Preferences.RandomizerCategory).OnModSaved += Save;
         }
 
         private void Save()
