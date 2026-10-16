@@ -1,5 +1,6 @@
 using MelonLoader;
 using System.ComponentModel.DataAnnotations;
+using UIFramework.UiExtensions;
 
 namespace SketchbookPlus
 {
@@ -30,8 +31,10 @@ namespace SketchbookPlus
         internal static MelonPreferences_Category SaveLoadCategory;
 		internal static MelonPreferences_Entry<bool> PrefSaveOutfit;
 		internal static MelonPreferences_Entry<string> PrefSavedOutfitName;
-		internal static MelonPreferences_Entry<string> PrefOutfitNameToLoad;
-		
+        internal static DynamicDropdownDescriptor PrefOutfitNameToLoadDescriptor;
+        internal static MelonPreferences_Entry<string> PrefOutfitNameToLoad;
+        internal static List<DropdownItem> loadOutfitList = new List<DropdownItem>();
+
 
         internal static MelonPreferences_Category RandomizerCategory;
 		internal static MelonPreferences_Entry<bool> PrefRandomizerIdentity;
@@ -58,7 +61,8 @@ namespace SketchbookPlus
 
             PrefSaveOutfit = SaveLoadCategory.CreateEntry("SaveOutfit", false, "Save Outfit", "Set to True and Save to Store the Equipped Outfit");
             PrefSavedOutfitName = SaveLoadCategory.CreateEntry("SavedOutfitName", "DefaultName", "Saved Outfit Name", "File Name To Save Under");
-            PrefOutfitNameToLoad = SaveLoadCategory.CreateEntry("OutfitNameToLoad", "DefaultName", "Outfit to Load from File", "File Name To Load");
+            PrefOutfitNameToLoadDescriptor = new DynamicDropdownDescriptor(loadOutfitList);
+            PrefOutfitNameToLoad = SaveLoadCategory.CreateEntry("OutfitNameToLoad", "", "Outfit to Load from File", "File Name To Load", false, false, PrefOutfitNameToLoadDescriptor);
             
             
             //Randomizer Category settings

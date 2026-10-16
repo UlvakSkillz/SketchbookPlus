@@ -5,20 +5,21 @@ using RumbleModdingAPI.RMAPI;
 using System.Collections;
 using UnityEngine;
 using UIFramework;
+using Il2CppRUMBLE.CharacterCreation.Interactable;
 
 namespace SketchbookPlus
 {
     public static class BuildInfo
     {
         public const string ModName = "SketchbookPlus";
-        public const string ModVersion = "1.3.1";
+        public const string ModVersion = "1.4.0";
         public const string Author = "UlvakSkillz";
     }
 
     public class main : MelonMod
     {
         private System.Random random = new System.Random(DateTime.Now.Millisecond * DateTime.Now.Second * DateTime.Now.Minute);
-        private List<string> acceptedFiles = new List<string>();
+        public static List<string> acceptedFiles = new List<string>();
         private List<string> failedFiles = new List<string>();
         private List<string> pendingFiles = new List<string>();
         private List<string> acceptedFilesTexts = new List<string>();
@@ -26,6 +27,7 @@ namespace SketchbookPlus
         private List<List<int>> acceptedItems = new List<List<int>>();
         private bool randomizerInit = false;
         private int lastOutfit = -1;
+        private DressingRoom dressingRoom = null;
 
         private void Log(string msg)
         {
@@ -64,14 +66,12 @@ namespace SketchbookPlus
         public override void OnInitializeMelon()
         {
             Preferences.InitPrefs();
-            UI.Register((MelonBase)this, Preferences.SketchbookPlusCategory, Preferences.SaveLoadCategory, Preferences.RandomizerCategory).OnModSaved += Save;
+            UI.RegisterMelon(this, Preferences.SketchbookPlusCategory, Preferences.SaveLoadCategory, Preferences.RandomizerCategory).OnModSaved += Save;
         }
 
         private void Save()
         {
             debugLog("Main Method Running");
-            PlayerVisualData pvd = PlayerManager.instance.localPlayer.Data.VisualData;
-            PlayerVisualData tempPVD = new PlayerVisualData(pvd);
             int[] outfit = new int[acceptedItems.Count];
             //if Reseting Files was true
             if (Preferences.PrefUpdateFilesTexts.Value)
@@ -82,18 +82,31 @@ namespace SketchbookPlus
                 pendingFiles.Clear();
                 acceptedFiles.Clear();
                 failedFiles.Clear();
+                debugLog("Rechecking Files");
+                recheckFiles();
             }
-            debugLog("Rechecking Files");
-            recheckFiles();
-            debugLog("Done Rechecking Files");
             if (!Preferences.PrefSavedOutfitName.Value.ToLower().EndsWith(".txt"))
             {
                 Preferences.PrefSavedOutfitName.Value += ".txt";
             }
-            if (!Preferences.PrefOutfitNameToLoad.Value.ToLower().EndsWith(".txt"))
+            if (Preferences.PrefSaveOutfit.Value)
             {
-                Preferences.PrefOutfitNameToLoad.Value += ".txt";
+                //reset Save Button to False
+                Preferences.PrefSaveOutfit.ResetToDefault();
+                debugLog(@"Saving Outfit: UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
+                string textToSave = getOutfitString(dressingRoom.VisualData);
+                debugLog("File Text: " + textToSave);
+                bool newFile = !File.Exists(@"UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
+                saveFile(textToSave, @"UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
+                if (newFile)
+                {
+                    acceptedFiles.Add(@"UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
+                    acceptedFilesTexts.Add(textToSave);
+                    Preferences.loadOutfitList.Add(new UIFramework.UiExtensions.DropdownItem(Preferences.PrefSavedOutfitName.Value.Replace(@"UserData\SketchbookPlus\", string.Empty).Replace(".txt", string.Empty), Preferences.PrefSavedOutfitName.Value.Replace(@"UserData\SketchbookPlus\", string.Empty).Replace(".txt", string.Empty)));
+                }
             }
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "Gym") return;
+            PlayerVisualData pvd = dressingRoom.VisualData;
             if (Preferences.PrefOutfitTypeToLoad.Value is OutfitTypes.RandomizerOutfit)
             {
                 debugLog("Starting Randomizer");
@@ -121,17 +134,9 @@ namespace SketchbookPlus
                 debugLog("Outfit Ready to Set");
                 setPVD(pvd, newOutfit);
                 Log("Randomizer Outfit Set: " + getOutfitString(pvd));
+                dressingRoom.UpdatePlayerVisuals();
             }
-            else if (Preferences.PrefSaveOutfit.Value)
-            {
-                //reset Save Button to False
-                Preferences.PrefSaveOutfit.ResetToDefault();
-                debugLog(@"Saving Outfit: UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
-                string textToSave = getOutfitString(PlayerManager.instance.localPlayer.Data.VisualData);
-                debugLog("File Text: " + textToSave);
-                saveFile(textToSave, @"UserData\SketchbookPlus\" + Preferences.PrefSavedOutfitName.Value);
-            }
-            else if (Calls.Scene.GetSceneName() == "Gym")
+            else
             {
                 if ((Preferences.PrefOutfitTypeToLoad.Value is OutfitTypes.RandomFromFilesOutfit) && (acceptedFiles.Count > 0))
                 {
@@ -146,8 +151,8 @@ namespace SketchbookPlus
                 }
                 else if (Preferences.PrefOutfitTypeToLoad.Value is OutfitTypes.SavedOutfit)
                 {
-                    debugLog("Loading Selected: " + Preferences.PrefOutfitNameToLoad.Value);
-                    loadOutfit(@"UserData\SketchbookPlus\" + Preferences.PrefOutfitNameToLoad.Value);
+                    debugLog("Loading Selected: " + Preferences.PrefOutfitNameToLoad.Value + ".txt");
+                    loadOutfit(@"UserData\SketchbookPlus\" + Preferences.PrefOutfitNameToLoad.Value + ".txt");
                 }
             }
         }
@@ -183,10 +188,12 @@ namespace SketchbookPlus
                     debugLog("Accepting file: " + pendingFiles[0]);
                     acceptedFiles.Add(pendingFiles[0]);
                     acceptedFilesTexts.Add(pendingFilesTexts[0]);
+                    Preferences.loadOutfitList.Add(new UIFramework.UiExtensions.DropdownItem(pendingFiles[0].Replace(@"UserData\SketchbookPlus\", string.Empty).Replace(".txt", string.Empty), pendingFiles[0].Replace(@"UserData\SketchbookPlus\", string.Empty).Replace(".txt", string.Empty)));
                     pendingFiles.Remove(pendingFiles[0]);
                     pendingFilesTexts.RemoveAt(0);
                 }
             }
+            debugLog("Done Rechecking Files");
         }
 
         private void saveFile(string textToSave, string file, bool addAcceptedFile = true)
@@ -239,7 +246,7 @@ namespace SketchbookPlus
         {
             debugLog("Setting Up Randomizer");
             int maxSlotsToCheck = 50;
-            PlayerVisualData pvd = PlayerManager.instance.localPlayer.Data.VisualData;
+            PlayerVisualData pvd = dressingRoom.VisualData;
             PlayerVisualData tempPVD = new PlayerVisualData(pvd);
             setPVD(tempPVD, pvd);
             string originalOutfit = getOutfitString(pvd);
@@ -352,14 +359,15 @@ namespace SketchbookPlus
             }
             Log("Text: " + acceptedFilesTexts[acceptedFiles.IndexOf(fileName)]);
             string[] data = acceptedFilesTexts[acceptedFiles.IndexOf(fileName)].Split(',');
-            PlayerVisualData pvd = PlayerManager.instance.localPlayer.Data.VisualData;
+            PlayerVisualData pvd = dressingRoom.VisualData;
             PlayerVisualData tempPVD = new PlayerVisualData(pvd);
             setPVD(tempPVD, data);
             if (checkItems(tempPVD.ToPlayfabDataString()))
             {
                 debugLog("Setting PVD Now");
                 setPVD(pvd, tempPVD);
-                Log("Loaded Outfit for Next Scene: " + fileName);
+                dressingRoom.UpdatePlayerVisuals();
+                Log("Loaded Outfit: " + fileName);
             }
         }
 
@@ -485,6 +493,8 @@ namespace SketchbookPlus
             if (map == "Gym")
             {
                 debugLog("Map is Gym");
+                dressingRoom = GameObjects.Gym.INTERACTABLES.DressingRoom.GetGameObject().GetComponent<DressingRoom>();
+                recheckFiles();
                 if (!randomizerInit)
                 {
                     debugLog("Setting up Randomizer");
